@@ -1,0 +1,61 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Package files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# Docker
+docker-compose.override.yml
+
+# Test cookies & temporary auth files
+cookies*.txt
+
+# Personal notes, testing, and documentation files
+README.md
+TESTING.md
+TESTING2.md
+TESTING*.md
+BackendContext.md
+frontend_chat_plan.md
+frontend_chat_plan*
+PLAN.md
+ProblemsFaced.md
+ProbleumsFaced.md
+APIS.md
+*.md
+

@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    dev.randomchat.platform: INFO
+    org.springframework.web.socket: WARN
