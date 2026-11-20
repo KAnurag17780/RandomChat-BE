@@ -8,21 +8,22 @@ import java.util.UUID;
 /**
  * Outbound server-to-client WebSocket event envelope.
  * <p>
- * {@code type} is always present. Other fields are populated depending on the event type.
+ * {@code type} is always present. Other fields are populated depending on the
+ * event type.
  * {@code null} fields are excluded from JSON serialization.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ServerEvent {
 
     // --- Event types ---
-    public static final String SEARCHING      = "SEARCHING";
-    public static final String MATCHED        = "MATCHED";
-    public static final String MESSAGE        = "MESSAGE";
-    public static final String MESSAGE_ACK    = "MESSAGE_ACK";
-    public static final String PARTNER_LEFT   = "PARTNER_LEFT";
-    public static final String TYPING         = "TYPING";
-    public static final String ERROR          = "ERROR";
-    public static final String PONG           = "PONG";
+    public static final String SEARCHING = "SEARCHING";
+    public static final String MATCHED = "MATCHED";
+    public static final String MESSAGE = "MESSAGE";
+    public static final String MESSAGE_ACK = "MESSAGE_ACK";
+    public static final String PARTNER_LEFT = "PARTNER_LEFT";
+    public static final String TYPING = "TYPING";
+    public static final String ERROR = "ERROR";
+    public static final String PONG = "PONG";
 
     private String type;
 
@@ -114,21 +115,59 @@ public class ServerEvent {
     // -----------------------------------------------------------------------
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record PartnerInfo(String displayName, String avatarUrl) {}
+    public record PartnerInfo(
+            UUID userId,
+            String displayName,
+            String avatarUrl,
+            String bio,
+            String interests) {
+    }
 
     // -----------------------------------------------------------------------
     // Getters (Jackson serialization)
     // -----------------------------------------------------------------------
 
-    public String getType() { return type; }
-    public UUID getPairId() { return pairId; }
-    public UUID getConversationId() { return conversationId; }
-    public PartnerInfo getPartner() { return partner; }
-    public UUID getMessageId() { return messageId; }
-    public String getText() { return text; }
-    public Instant getTimestamp() { return timestamp; }
-    public UUID getClientMessageId() { return clientMessageId; }
-    public String getReason() { return reason; }
-    public String getMessage() { return message; }
-    public Boolean getIsTyping() { return isTyping; }
+    public String getType() {
+        return type;
+    }
+
+    public UUID getPairId() {
+        return pairId;
+    }
+
+    public UUID getConversationId() {
+        return conversationId;
+    }
+
+    public PartnerInfo getPartner() {
+        return partner;
+    }
+
+    public UUID getMessageId() {
+        return messageId;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public UUID getClientMessageId() {
+        return clientMessageId;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public Boolean getIsTyping() {
+        return isTyping;
+    }
 }

@@ -30,15 +30,18 @@ import java.util.UUID;
  * Primary WebSocket handler for the /ws/chat endpoint.
  * <p>
  * Processes client actions: FIND_MATCH, SEND, NEXT, LEAVE, TYPING, PING.<br>
- * All matchmaking state transitions are delegated to {@link MatchmakingEngine}.<br>
+ * All matchmaking state transitions are delegated to
+ * {@link MatchmakingEngine}.<br>
  * All message delivery uses {@link WebSocketSender}.
  * <p>
  * <strong>Threading model:</strong>
  * <ul>
- *   <li>afterConnectionEstablished, handleTextMessage, afterConnectionClosed are called
- *       by the WebSocket container thread pool.</li>
- *   <li>Matchmaking state transitions happen under the engine's internal lock.</li>
- *   <li>Database I/O and WebSocket sends happen after releasing the lock.</li>
+ * <li>afterConnectionEstablished, handleTextMessage, afterConnectionClosed are
+ * called
+ * by the WebSocket container thread pool.</li>
+ * <li>Matchmaking state transitions happen under the engine's internal
+ * lock.</li>
+ * <li>Database I/O and WebSocket sends happen after releasing the lock.</li>
  * </ul>
  */
 @Component
@@ -60,11 +63,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
 
     public ChatWebSocketHandler(SessionRegistry sessionRegistry,
-                                 MatchmakingEngine matchmakingEngine,
-                                 ConversationService conversationService,
-                                 UserProfileRepository profileRepository,
-                                 WebSocketSender sender,
-                                 ObjectMapper objectMapper) {
+            MatchmakingEngine matchmakingEngine,
+            ConversationService conversationService,
+            UserProfileRepository profileRepository,
+            WebSocketSender sender,
+            ObjectMapper objectMapper) {
         this.sessionRegistry = sessionRegistry;
         this.matchmakingEngine = matchmakingEngine;
         this.conversationService = conversationService;
@@ -102,17 +105,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(@NonNull WebSocketSession rawSession,
-                                      @NonNull CloseStatus status) {
+            @NonNull CloseStatus status) {
         Optional<ChatSession> sessionOpt = sessionRegistry.findById(rawSession.getId());
-        if (sessionOpt.isEmpty()) return;
+        if (sessionOpt.isEmpty())
+            return;
 
         ChatSession session = sessionOpt.get();
         log.info("WebSocket closed: sessionId={}, userId={}, status={}",
                 session.getSessionId(), session.getUserId(), status);
 
         // End pair and notify partner if matched/waiting
-        Optional<MatchmakingEngine.LeaveResult> leaveResult =
-                matchmakingEngine.leaveOrDisconnect(session);
+        Optional<MatchmakingEngine.LeaveResult> leaveResult = matchmakingEngine.leaveOrDisconnect(session);
 
         leaveResult.ifPresent(result -> {
             // Persist conversation end (outside lock)
@@ -132,7 +135,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTransportError(@NonNull WebSocketSession session,
-                                     @NonNull Throwable exception) {
+            @NonNull Throwable exception) {
         log.warn("WebSocket transport error on session {}: {}", session.getId(), exception.getMessage());
         // afterConnectionClosed will be called next; cleanup happens there
     }
@@ -143,7 +146,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(@NonNull WebSocketSession rawSession,
-                                     @NonNull TextMessage message) {
+            @NonNull TextMessage message) {
         Optional<ChatSession> sessionOpt = sessionRegistry.findById(rawSession.getId());
         if (sessionOpt.isEmpty()) {
             log.warn("Received message from unregistered session {}", rawSession.getId());
@@ -168,12 +171,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         switch (action.getAction()) {
             case ClientAction.FIND_MATCH -> handleFindMatch(session);
-            case ClientAction.SEND       -> handleSend(session, action);
-            case ClientAction.NEXT       -> handleNext(session);
-            case ClientAction.LEAVE      -> handleLeave(session);
-            case ClientAction.TYPING     -> handleTyping(session, action);
-            case ClientAction.PING       -> sender.sendEvent(session, ServerEvent.pong());
-            default                      -> sender.sendError(session, "Unknown action: " + action.getAction());
+            case ClientAction.SEND -> handleSend(session, action);
+            case ClientAction.NEXT -> handleNext(session);
+            case ClientAction.LEAVE -> handleLeave(session);
+            case ClientAction.TYPING -> handleTyping(session, action);
+            case ClientAction.PING -> sender.sendEvent(session, ServerEvent.pong());
+            default -> sender.sendError(session, "Unknown action: " + action.getAction());
         }
     }
 
@@ -204,9 +207,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         ServerEvent.PartnerInfo partnerOfB = buildPartnerInfo(pair.getUserIdA());
 
         sender.sendEvent(result.self(),
-                ServerEvent.matched(pair.getPairId(), pair.getConversationId(), partnerOfB));
-        sender.sendEvent(result.partner(),
                 ServerEvent.matched(pair.getPairId(), pair.getConversationId(), partnerOfA));
+        sender.sendEvent(result.partner(),
+                ServerEvent.matched(pair.getPairId(), pair.getConversationId(), partnerOfB));
     }
 
     private void handleSend(ChatSession session, ClientAction action) {
@@ -241,8 +244,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     pair.getConversationId(),
                     session.getUserId(),
                     action.getMessageId(),
-                    text
-            );
+                    text);
         } catch (IllegalArgumentException e) {
             sender.sendError(session, e.getMessage());
             return;
@@ -262,10 +264,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // Relay to partner
         String partnerSessionId = pair.getPartnerSessionId(session.getSessionId());
         if (partnerSessionId != null) {
-            sessionRegistry.findById(partnerSessionId).ifPresent(partnerSession ->
-                    sender.sendEvent(partnerSession,
-                            ServerEvent.message(message.getId(), text, message.getCreatedAt()))
-            );
+            sessionRegistry.findById(partnerSessionId).ifPresent(partnerSession -> sender.sendEvent(partnerSession,
+                    ServerEvent.message(message.getId(), text, message.getCreatedAt())));
         }
 
         // Acknowledge to sender
@@ -274,8 +274,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private void handleNext(ChatSession session) {
         UUID newConversationId = UUID.randomUUID();
-        Optional<MatchmakingEngine.NextResult> result =
-                matchmakingEngine.next(session, newConversationId);
+        Optional<MatchmakingEngine.NextResult> result = matchmakingEngine.next(session, newConversationId);
 
         if (result.isEmpty()) {
             sender.sendError(session, "You are not currently in a chat");
@@ -297,8 +296,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void handleLeave(ChatSession session) {
-        Optional<MatchmakingEngine.LeaveResult> result =
-                matchmakingEngine.leaveOrDisconnect(session);
+        Optional<MatchmakingEngine.LeaveResult> result = matchmakingEngine.leaveOrDisconnect(session);
 
         result.ifPresent(leave -> {
             if (leave.endedPair() != null) {
@@ -317,13 +315,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         boolean isTyping = Boolean.TRUE.equals(action.getIsTyping());
 
         Optional<ChatPair> pairOpt = matchmakingEngine.findPairBySession(session.getSessionId());
-        if (pairOpt.isEmpty() || pairOpt.get().isEnded()) return; // silently ignore if not paired
+        if (pairOpt.isEmpty() || pairOpt.get().isEnded())
+            return; // silently ignore if not paired
 
         String partnerSessionId = pairOpt.get().getPartnerSessionId(session.getSessionId());
         if (partnerSessionId != null) {
-            sessionRegistry.findById(partnerSessionId).ifPresent(partnerSession ->
-                    sender.sendEvent(partnerSession, ServerEvent.typing(isTyping))
-            );
+            sessionRegistry.findById(partnerSessionId)
+                    .ifPresent(partnerSession -> sender.sendEvent(partnerSession, ServerEvent.typing(isTyping)));
         }
     }
 
@@ -334,10 +332,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private ServerEvent.PartnerInfo buildPartnerInfo(UUID userId) {
         return profileRepository.findByUserId(userId)
                 .map(p -> new ServerEvent.PartnerInfo(
+                        userId,
                         p.getDisplayName() != null ? p.getDisplayName() : "Stranger",
-                        p.getAvatarUrl()
-                ))
-                .orElse(new ServerEvent.PartnerInfo("Stranger", null));
+                        p.getAvatarUrl(),
+                        p.getBio(),
+                        p.getInterests()))
+                .orElse(new ServerEvent.PartnerInfo(userId, "Stranger", null, null, null));
     }
 
     private void silentClose(WebSocketSession session, CloseStatus status) {
